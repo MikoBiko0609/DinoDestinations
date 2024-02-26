@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="resultPage.css" />
+    <title>Dino Destinations</title>
+</head>
+<body>
+    <div class="logo"><img src="./images/dd_logo.png"></div>
+    <div class="container">
+        <div id="infoBox">
+            <div id="infoBoxInner">
+            <!-- Place details will be dynamically inserted here -->
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+    <script>
+        function initMap() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const city = urlParams.get('city');
+            const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: { lat: -34.397, lng: 150.644 }, 
+            });
+            const service = new google.maps.places.PlacesService(map);
+            const request = {
+                query: city + " dinosaur museum",
+                fields: ["name", "geometry", "formatted_address"],
+            };
+            service.textSearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                    map.setCenter(results[0].geometry.location);
+                    results.forEach((place) => {
+                        new google.maps.Marker({
+                            map: map,
+                            position: place.geometry.location,
+                        });
+                        addPlaceDetails(place);
+                    });
+                } else {
+                    document.getElementById('infoBox').innerHTML = `<p>No dinosaur museums found in this city.</p>`;
+                }
+            });
+        }
+
+        function addPlaceDetails(place) {
+            const infoBox = document.getElementById('infoBox');
+            const placeDetails = `
+                <div class="place-details">
+                    <strong>${place.name}</strong>
+                    <p>${place.formatted_address}</p>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.formatted_address)}" target="_blank">Get Directions</a>
+                </div>
+            `;
+            infoBox.innerHTML += placeDetails;
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD6R-O7AwjY_85moRy93wlYgRFGN2k1Yvk&callback=initMap&libraries=places&v=weekly" async></script>
+</body>
+</html>
