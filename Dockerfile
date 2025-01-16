@@ -1,17 +1,25 @@
-# Use an official PHP image with Apache
-FROM php:8.0-apache
+FROM php:8.1-apache
 
-# Copy all project files to the Apache server directory
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && docker-php-ext-install mysqli pdo pdo_mysql
+
+# Enable Apache modules
+RUN a2enmod rewrite
+
+# Copy application files
 COPY . /var/www/html/
 
-# Set the working directory
-WORKDIR /var/www/html/
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
-# Ensure required PHP extensions are installed (e.g., mysqli for MySQL)
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Apache configuration
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Expose port 8080 for Render
-EXPOSE 8080
+# Expose port
+EXPOSE 80
 
-# Start the Apache server
+# Start Apache
 CMD ["apache2-foreground"]
