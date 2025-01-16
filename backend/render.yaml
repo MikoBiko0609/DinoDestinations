@@ -1,7 +1,6 @@
 services:
   - type: web
-    name: DinoDestinations
+    name: dinodestinations
     env: docker
-    plan: free
-    dockerfilePath: Dockerfile
-    healthCheckPath: /
+    buildCommand: docker build -t dinodestinations .
+    startCommand: docker run -p 80:80 dinodestinations
