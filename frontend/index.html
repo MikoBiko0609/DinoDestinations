@@ -17,17 +17,18 @@
         <button class="tab" id="signupTab" onclick="openTab(event, 'Signup')">Signup</button>
 
         <div id="Login" class="tab-content">
-            <form id="loginForm" action="login.php" method="POST">
+            <form id="loginForm">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required placeholder="Username">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required placeholder="Password">
                 <button type="submit">Login</button>
+                <div id="loginMessage" class="message"></div>
             </form>
         </div>
 
         <div id="Signup" class="tab-content">
-            <form id="signupForm" action="register.php" method="POST">
+            <form id="signupForm">
                 <label for="newUsername">Username:</label>
                 <input type="text" id="newUsername" name="username" required placeholder="Username">
                 <label for="newPassword">Password:</label>
@@ -35,6 +36,7 @@
                 <label for="confirmPassword">Confirm Password:</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm Password">
                 <button type="submit">Sign Up</button>
+                <div id="signupMessage" class="message"></div>
             </form>
         </div>
     </div>

@@ -1,43 +1,81 @@
 <?php
 session_start();
+require_once 'config.php';
 
-$servername = "localhost";
-$dbUsername = "root"; 
-$dbPassword = ""; 
-$dbname = "DinoDestinations";
+// Add CORS headers
+header('Access-Control-Allow-Origin: *');  // Replace * with your Vercel frontend URL in production
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
-// Create connection
-$conn = new mysqli($servername, $dbUsername, $dbPassword, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
-// Take the posted form data
-$username = $_POST['username'];
-$password = $_POST['password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        // Take the posted form data
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $confirmPassword = $_POST['confirmPassword'];
 
-// Hash the password for security
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        // Basic validation
+        if (empty($username) || empty($password)) {
+            throw new Exception("All fields are required");
+        }
 
-// Prepare the SQL statement
-$stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-$stmt->bind_param("ss", $username, $hashedPassword);
+        if ($password !== $confirmPassword) {
+            throw new Exception("Passwords do not match");
+        }
 
-if ($stmt->execute()) {
-    $_SESSION['signup_message'] = "Account created successfully. You can now log in.";
-} else {
-    if ($conn->errno == 1062) {
-        $_SESSION['signup_message'] = "Username already exists. Please choose another one.";
-    } else {
-        $_SESSION['signup_message'] = "Error: " . $stmt->error;
+        // Hash the password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Check if username exists
+        $checkStmt = $conn->prepare("SELECT username FROM users WHERE username = ?");
+        $checkStmt->bind_param("s", $username);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            throw new Exception("Username already exists");
+        }
+        
+        // Prepare the insert statement
+        $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("ss", $username, $hashedPassword);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registration successful',
+            'redirect' => 'index.html'
+        ]);
+
+        $stmt->close();
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+} else {
+    http_response_code(405);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Method not allowed'
+    ]);
 }
 
-$stmt->close();
 $conn->close();
-
-// Redirect back to the front page
-header('Location: index.html');
-exit();
 ?>
