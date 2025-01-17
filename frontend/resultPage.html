@@ -21,7 +21,7 @@
             const city = urlParams.get('city');
 
             if (!city) {
-                showError('No city specified');
+                showError('No city specified. Please enter a city and try again.');
                 return;
             }
 
@@ -37,8 +37,8 @@
 
                     const service = new google.maps.places.PlacesService(map);
                     const request = {
-                        query: city + " dinosaur museum OR dinosaur exhibit OR paleontology museum",
-                        type: ['museum'],
+                        query: `${city} (dinosaur museum OR dinosaur exhibit OR paleontology museum OR fossil museum)`,
+                        type: ['museum', 'zoo', 'aquarium'], // Expanded search to include other potentially relevant places
                         fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
                     };
 
@@ -47,8 +47,12 @@
                             // Clear any previous "no results" message
                             document.getElementById('infoBoxInner').innerHTML = '';
                             
-                            // Sort results by rating (if available)
-                            results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                            // Sort results by rating (if available) and number of reviews
+                            results.sort((a, b) => {
+                                const ratingDiff = (b.rating || 0) - (a.rating || 0);
+                                if (ratingDiff !== 0) return ratingDiff;
+                                return (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
+                            });
 
                             results.forEach((place) => {
                                 new google.maps.Marker({
@@ -62,11 +66,11 @@
                             // Center map on first result
                             map.setCenter(results[0].geometry.location);
                         } else {
-                            showError('No dinosaur museums found in this city.');
+                            showError(`No dinosaur-related attractions found in ${city}. Try a different city or search term.`);
                         }
                     });
                 } else {
-                    showError('Could not locate the specified city.');
+                    showError(`Could not locate the city "${city}". Please try again with a different city.`);
                 }
             });
         }
