@@ -1,5 +1,4 @@
-// API URL - replace with your Render backend URL when deployed
-const API_URL = 'https://your-render-backend-url.onrender.com';
+const API_URL = 'https://dinodestinations.onrender.com';
 
 function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
@@ -34,12 +33,19 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     formData.append('password', document.getElementById('password').value);
 
     try {
+        console.log('Attempting login...');
         const response = await fetch(`${API_URL}/login.php`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
+        console.log('Login response status:', response.status);
         const data = await response.json();
+        console.log('Login response:', data);
 
         if (data.success) {
             window.location.href = data.redirect;
@@ -47,8 +53,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             document.getElementById('loginMessage').textContent = data.message;
         }
     } catch (error) {
+        console.error('Login error:', error);
         document.getElementById('loginMessage').textContent = 'An error occurred. Please try again.';
-        console.error('Error:', error);
     }
 });
 
@@ -66,12 +72,19 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     formData.append('confirmPassword', document.getElementById('confirmPassword').value);
 
     try {
+        console.log('Attempting registration...');
         const response = await fetch(`${API_URL}/register.php`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
+        console.log('Register response status:', response.status);
         const data = await response.json();
+        console.log('Register response:', data);
 
         if (data.success) {
             document.getElementById('signupMessage').textContent = 'Registration successful! Redirecting to login...';
@@ -82,8 +95,8 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             document.getElementById('signupMessage').textContent = data.message;
         }
     } catch (error) {
+        console.error('Register error:', error);
         document.getElementById('signupMessage').textContent = 'An error occurred. Please try again.';
-        console.error('Error:', error);
     }
 });
 
