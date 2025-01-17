@@ -21,13 +21,14 @@ function checkPasswords() {
         document.getElementById('signupMessage').textContent = "Passwords do not match.";
         return false;
     }
+    document.getElementById('signupMessage').textContent = "";
     return true;
 }
 
 // Handle login form submission
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
-    
+
     const formData = new FormData();
     formData.append('username', document.getElementById('username').value);
     formData.append('password', document.getElementById('password').value);
@@ -61,7 +62,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 // Handle signup form submission
 document.getElementById('signupForm').addEventListener('submit', async function(event) {
     event.preventDefault();
-    
+
     if (!checkPasswords()) {
         return;
     }

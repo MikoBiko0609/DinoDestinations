@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
+$apiKey = getenv('GOOGLE_MAPS_API_KEY');
 
 // Add CORS headers
 header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');
@@ -8,6 +9,7 @@ header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
+
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
