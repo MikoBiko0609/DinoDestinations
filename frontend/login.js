@@ -78,8 +78,10 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             body: formData,
             credentials: 'include',
             headers: {
-                'Accept': 'application/json'
-            }
+                'Accept': 'application/json',
+                'Origin': 'https://dino-destinations.vercel.app'
+            },
+            mode: 'cors'
         });
 
         console.log('Register response status:', response.status);

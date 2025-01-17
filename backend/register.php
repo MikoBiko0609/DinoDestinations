@@ -1,26 +1,36 @@
 <?php
+// Set error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Start session
 session_start();
-require_once 'config.php';
 
-// Add CORS headers
-header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');  // Updated domain
+// CORS headers - must be before any output
+header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept');
+header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Allow-Credentials: true');
+header('Content-Type: application/json');
 
-// Handle preflight requests
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Rest of your register.php code remains the same
+// Include database configuration
+require_once 'config.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // Log incoming request data for debugging
+        error_log("Received POST request: " . print_r($_POST, true));
+
         // Take the posted form data
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $confirmPassword = $_POST['confirmPassword'];
+        $username = isset($_POST['username']) ? $_POST['username'] : null;
+        $password = isset($_POST['password']) ? $_POST['password'] : null;
+        $confirmPassword = isset($_POST['confirmPassword']) ? $_POST['confirmPassword'] : null;
 
         // Basic validation
         if (empty($username) || empty($password)) {
@@ -64,7 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt->close();
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        // Log the error
+        error_log("Registration error: " . $e->getMessage());
+        
         http_response_code(400);
         echo json_encode([
             'success' => false,
