@@ -9,9 +9,7 @@
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
     <div class="container">
         <div id="infoBox">
-            <div id="infoBoxInner">
-                <!-- Place details will be dynamically inserted here -->
-            </div>
+            <div id="infoBoxInner"></div>
         </div>
         <div id="map"></div>
     </div>
@@ -25,7 +23,7 @@
                 return;
             }
 
-            // Geocode the city first to get a precise location
+            // Step 1: Geocode the city to get latitude & longitude
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ address: city }, (results, status) => {
                 if (status === 'OK' && results[0]) {
@@ -37,58 +35,38 @@
 
                     const service = new google.maps.places.PlacesService(map);
 
-                    // Queries to test different search terms
-                    const queries = [
-                        `dinosaur museum in ${city}`,
-                        `paleontology museum in ${city}`,
-                        `fossil museum in ${city}`,
-                        `dinosaur exhibit in ${city}`,
-                        `dinosaur attraction in ${city}`
-                    ];
+                    // Step 2: Search for dinosaur-related places using the geocoded location
+                    const request = {
+                        query: "dinosaur museum OR paleontology museum OR fossil museum OR dinosaur exhibit",
+                        location: location,  // ✅ Fix: Add location
+                        radius: 20000,  // ✅ Fix: Set search radius (20 km)
+                        type: ["museum", "tourist_attraction", "park"],
+                        fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
+                    };
 
-                    let resultsFound = false;
-                    let completedRequests = 0;
+                    service.textSearch(request, (results, status) => {
+                        console.log("Google Places API Response:", results, status);
 
-                    queries.forEach(query => {
-                        const request = {
-                            query: query,
-                            radius: 20000, // Increase radius to 20 km
-                            type: ['museum', 'tourist_attraction', 'park'], // Expand types
-                            fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
-                        };
+                        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+                            document.getElementById('infoBoxInner').innerHTML = ''; // Clear previous message
 
-                        service.textSearch(request, (results, status) => {
-                            console.log(`Search results for "${query}":`, results, status);
-                            completedRequests++;
-
-                            if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                                resultsFound = true;
-
-                                results.sort((a, b) => {
-                                    const ratingDiff = (b.rating || 0) - (a.rating || 0);
-                                    return ratingDiff !== 0 ? ratingDiff : (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
+                            results.forEach((place) => {
+                                new google.maps.Marker({
+                                    map: map,
+                                    position: place.geometry.location,
+                                    title: place.name
                                 });
+                                addPlaceDetails(place);
+                            });
 
-                                results.forEach(place => {
-                                    new google.maps.Marker({
-                                        map: map,
-                                        position: place.geometry.location,
-                                        title: place.name
-                                    });
-                                    addPlaceDetails(place);
-                                });
-
-                                map.setCenter(results[0].geometry.location);
-                            }
-
-                            // Show error only if all requests are completed and no results were found
-                            if (completedRequests === queries.length && !resultsFound) {
-                                showError(`No dinosaur-related attractions found in ${city}. Try a different search term.`);
-                            }
-                        });
+                            // Center the map on the first result
+                            map.setCenter(results[0].geometry.location);
+                        } else {
+                            showError(`No dinosaur-related attractions found in ${city}. Try a different city.`);
+                        }
                     });
                 } else {
-                    showError(`Could not locate the city "${city}". Please try again with a different city.`);
+                    showError(`Could not locate the city "${city}". Please try again.`);
                 }
             });
         }
@@ -107,16 +85,11 @@
         }
 
         function showError(message) {
-            const infoBoxInner = document.getElementById('infoBoxInner');
-            infoBoxInner.innerHTML = `<p class="error">${message}</p>`;
-        }
-
-        // Error handling for script loading
-        window.onerror = function(message, source, lineno, colno, error) {
-            showError('An error occurred while loading the map. Please try again later.');
-            return true;
+            document.getElementById('infoBoxInner').innerHTML = `<p class="error">${message}</p>`;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places&callback=initMap" defer></script>
+
+    <!-- ✅ Fix: Added async defer to improve performance -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places&callback=initMap"></script>
 </body>
 </html>
