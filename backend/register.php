@@ -3,9 +3,9 @@ session_start();
 require_once 'config.php';
 
 // Add CORS headers
-header('Access-Control-Allow-Origin: https://dino-destinations-pm0xmrbb9-michael-de-leons-projects.vercel.app');
+header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');  // Updated domain
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Accept');
 header('Access-Control-Allow-Credentials: true');
 
 // Handle preflight requests
@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+// Rest of your register.php code remains the same
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Take the posted form data

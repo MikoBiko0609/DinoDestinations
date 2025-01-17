@@ -1,11 +1,11 @@
 <?php
 session_start();
-require_once 'config.php';  // This will use the connection from config.php
+require_once 'config.php';
 
-// Add CORS headers for the API
-header('Access-Control-Allow-Origin: https://dino-destinations-pm0xmrbb9-michael-de-leons-projects.vercel.app');
+// Add CORS headers
+header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');  // Updated domain
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Accept');
 header('Access-Control-Allow-Credentials: true');
 
 // Handle preflight requests
