@@ -3,10 +3,11 @@ session_start();
 require_once 'config.php';
 
 // Add CORS headers
-header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');  // Updated domain
+header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept');
+header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Allow-Credentials: true');
+header('Content-Type: application/json');
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -15,29 +16,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Take the posted form data
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
     try {
+        // Take the posted form data
+        $username = $_POST['username'] ?? null;
+        $password = $_POST['password'] ?? null;
+
+        if (empty($username) || empty($password)) {
+            throw new Exception("Username and password are required");
+        }
+
         // Prepare the SQL statement
-        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
+        $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = :username");
         if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
+            throw new Exception("Prepare failed");
         }
 
-        $stmt->bind_param("s", $username);
+        $stmt->execute(['username' => $username]);
         
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-
-        $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            // Verify the password against the hash in the database
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Verify the password
             if (password_verify($password, $row['password'])) {
-                // Password is correct, so start a new session
+                // Password is correct, start session
                 session_regenerate_id();
                 $_SESSION['loggedin'] = TRUE;
                 $_SESSION['name'] = $row['username'];
@@ -61,9 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
         }
 
-        $stmt->close();
     } catch (Exception $e) {
-        error_log($e->getMessage());
+        error_log("Login error: " . $e->getMessage());
         http_response_code(500);
         echo json_encode([
             'success' => false,
@@ -77,6 +75,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'message' => 'Method not allowed'
     ]);
 }
-
-$conn->close();
 ?>

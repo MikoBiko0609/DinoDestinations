@@ -1,36 +1,26 @@
 <?php
-// Set error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Start session
 session_start();
+require_once 'config.php';
 
-// CORS headers - must be before any output
+// Add CORS headers
 header('Access-Control-Allow-Origin: https://dino-destinations.vercel.app');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Accept, Origin');
 header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
 
-// Handle preflight OPTIONS request
+// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Include database configuration
-require_once 'config.php';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Log incoming request data for debugging
-        error_log("Received POST request: " . print_r($_POST, true));
-
         // Take the posted form data
-        $username = isset($_POST['username']) ? $_POST['username'] : null;
-        $password = isset($_POST['password']) ? $_POST['password'] : null;
-        $confirmPassword = isset($_POST['confirmPassword']) ? $_POST['confirmPassword'] : null;
+        $username = $_POST['username'] ?? null;
+        $password = $_POST['password'] ?? null;
+        $confirmPassword = $_POST['confirmPassword'] ?? null;
 
         // Basic validation
         if (empty($username) || empty($password)) {
@@ -45,25 +35,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         // Check if username exists
-        $checkStmt = $conn->prepare("SELECT username FROM users WHERE username = ?");
-        $checkStmt->bind_param("s", $username);
-        $checkStmt->execute();
-        $result = $checkStmt->get_result();
+        $checkStmt = $conn->prepare("SELECT username FROM users WHERE username = :username");
+        $checkStmt->execute(['username' => $username]);
         
-        if ($result->num_rows > 0) {
+        if ($checkStmt->rowCount() > 0) {
             throw new Exception("Username already exists");
         }
         
-        // Prepare the insert statement
-        $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+        // Insert new user
+        $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (:username, :password)");
         if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
+            throw new Exception("Prepare failed");
         }
 
-        $stmt->bind_param("ss", $username, $hashedPassword);
+        $success = $stmt->execute([
+            'username' => $username,
+            'password' => $hashedPassword
+        ]);
         
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
+        if (!$success) {
+            throw new Exception("Failed to create user");
         }
 
         echo json_encode([
@@ -72,11 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'redirect' => 'index.html'
         ]);
 
-        $stmt->close();
     } catch (Exception $e) {
-        // Log the error
         error_log("Registration error: " . $e->getMessage());
-        
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -90,6 +78,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'message' => 'Method not allowed'
     ]);
 }
-
-$conn->close();
 ?>

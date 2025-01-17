@@ -1,35 +1,29 @@
 <?php
-// Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Database configuration
-$servername = getenv('DB_HOST') ?: 'db4free.net';
-$dbUsername = getenv('DB_USER') ?: 'dinomiko';
-$dbPassword = getenv('DB_PASSWORD') ?: 'dino1223';
-$dbname = getenv('DB_NAME') ?: 'dinodestinations';
+// Get environment variables or use defaults
+$db_host = getenv('DB_HOST') ?: 'aws-0-us-west-1.pooler.supabase.com';
+$db_port = getenv('DB_PORT') ?: '6543';  // Note the specific port for transaction pooler
+$db_name = getenv('DB_NAME') ?: 'postgres';
+$db_user = getenv('DB_USER') ?: 'postgres.sjufpzxbrjdieymdfhwj';
+$db_password = getenv('DB_PASSWORD');  // This should be set in Render environment variables
 
 try {
-    // Create connection with error reporting
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-    $conn = new mysqli($servername, $dbUsername, $dbPassword, $dbname);
+    $dsn = "pgsql:host=$db_host;port=$db_port;dbname=$db_name;user=$db_user;password=$db_password";
+    $conn = new PDO($dsn);
     
-    // Set longer timeout for db4free
-    $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 30);
+    // Set error mode to exception
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Check connection
-    if ($conn->connect_error) {
-        error_log("Connection failed: " . $conn->connect_error);
-        throw new Exception("Database connection failed");
-    }
-    
-    // Set charset to utf8mb4
-    $conn->set_charset('utf8mb4');
-    
-} catch (Exception $e) {
+} catch (PDOException $e) {
     error_log("Database connection error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Database connection failed', 'details' => $e->getMessage()]);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Database connection failed', 
+        'details' => $e->getMessage()
+    ]);
     exit();
 }
 ?>
