@@ -1,5 +1,5 @@
 <?php
-$apiKey = getenv('GOOGLE_MAPS_API_KEY');
+$apiKey = trim(file_get_contents('/etc/secrets/google-maps-api-key.env'));
 
 if (!$apiKey) {
     http_response_code(500);
