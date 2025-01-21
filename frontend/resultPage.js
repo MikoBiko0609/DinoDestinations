@@ -1,6 +1,8 @@
 console.log("Executing resultPage.js");
 
-// Load API Key from `config.js`
+// Load API Key from Vercel Environment Variables
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
 console.log("Google Maps API Key:", GOOGLE_MAPS_API_KEY); // Debugging
 
 function initMap() {
@@ -14,12 +16,11 @@ function initMap() {
 
     // Load Google Maps dynamically with the API Key
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=startMap&region=US`;
     script.async = true;
     document.body.appendChild(script);
     script.onload = () => {
         console.log("Google Maps API script loaded");
-        startMap(city);
     };
     script.onerror = () => {
         console.error("Error loading Google Maps API");
@@ -27,8 +28,17 @@ function initMap() {
     };
 }
 
-function startMap(city) {
+function startMap() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const city = urlParams.get('city');
+    
     console.log("Initializing map for city:", city);
+    
+    if (!city) {
+        showError('No city specified. Please enter a city and try again.');
+        return;
+    }
+
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ address: city }, (results, status) => {
         if (status === "OK" && results[0]) {
@@ -41,8 +51,8 @@ function startMap(city) {
             const service = new google.maps.places.PlacesService(map);
             const request = {
                 location: location,
-                radius: 50000,
-                keyword: "dinosaur",
+                radius: 50000, // Covers a 50 km radius around the city
+                keyword: "dinosaur", // Search for ANY dinosaur-related places
             };
 
             service.nearbySearch(request, (results, status) => {
