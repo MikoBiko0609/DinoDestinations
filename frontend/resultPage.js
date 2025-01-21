@@ -1,6 +1,8 @@
 console.log("Executing resultPage.js");
 
-// Function to dynamically load Google Maps API script
+// ✅ Get API key from `window` (since `process.env` doesn't work in frontend)
+const apiKey = window.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
 function loadGoogleMapsScript(callback) {
     if (window.google && window.google.maps) {
         console.log("✅ Google Maps API already loaded.");
@@ -8,7 +10,6 @@ function loadGoogleMapsScript(callback) {
         return;
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;  // ✅ Uses Vercel Environment Variable
     if (!apiKey) {
         console.error("❌ Google Maps API Key is missing.");
         showError("Google Maps API key is missing. Please contact support.");
@@ -51,7 +52,9 @@ function initMap() {
 
     console.log(`🔍 Searching for: ${city}`);
 
-    fetch(`/api/maps?city=${encodeURIComponent(city)}`)
+    fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+        city + " dinosaur museum OR fossil museum OR paleontology museum"
+    )}&key=${apiKey}`)
         .then((response) => response.json())
         .then((data) => {
             console.log("📦 API Response:", data);
