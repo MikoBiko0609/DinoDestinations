@@ -4,138 +4,16 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="resultPage.css" />
     <title>Dino Destinations</title>
+    <script src="config.js"></script> <!-- Loads API Key -->
+    <script defer src="resultPage.js"></script> <!-- Loads JavaScript -->
 </head>
 <body>
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
     <div class="container">
         <div id="infoBox">
-            <div id="infoBoxInner">
-                <!-- Place details will be dynamically inserted here -->
-            </div>
+            <div id="infoBoxInner"></div>
         </div>
         <div id="map"></div>
     </div>
-    <script>
-        console.log('Executing inline JavaScript');
-
-        // Check if the API key is available
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-        if (apiKey) {
-            console.log('Google Maps API Key:', apiKey);
-        } else {
-            console.error('Google Maps API Key not found');
-        }
-
-        async function initMap() {
-            console.log('initMap function called');
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const city = urlParams.get('city');
-            console.log('Searched city:', city);
-
-            if (!city) {
-                showError('No city specified. Please enter a city and try again.');
-                return;
-            }
-
-            try {
-                const script = await new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
-                    script.async = true;
-                    script.onload = resolve;
-                    script.onerror = reject;
-                    document.body.appendChild(script);
-                });
-                console.log('Google Maps API script loaded');
-
-                // Geocode the city first to get the coordinates
-                const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({ address: city }, (results, status) => {
-                    console.log('Geocode status:', status);
-                    console.log('Geocode results:', results);
-
-                    if (status === 'OK' && results[0]) {
-                        const location = results[0].geometry.location;
-                        const map = new google.maps.Map(document.getElementById('map'), {
-                            zoom: 12,
-                            center: location,
-                        });
-
-                        const service = new google.maps.places.PlacesService(map);
-                        const request = {
-                            query: `${city} (dinosaur museum OR dinosaur exhibit OR paleontology museum OR fossil museum)`,
-                            location: location,
-                            radius: 10000, // 10 km radius
-                            type: ['museum', 'zoo', 'aquarium'],
-                            fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
-                        };
-
-                        service.nearbySearch(request, (results, status) => {
-                            console.log('Nearby search status:', status);
-                            console.log('Nearby search results:', results);
-
-                            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                                // Clear any previous "no results" message
-                                document.getElementById('infoBoxInner').innerHTML = '';
-                                
-                                // Sort results by rating (if available) and number of reviews
-                                results.sort((a, b) => {
-                                    const ratingDiff = (b.rating || 0) - (a.rating || 0);
-                                    if (ratingDiff !== 0) return ratingDiff;
-                                    return (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
-                                });
-
-                                results.forEach((place) => {
-                                    new google.maps.Marker({
-                                        map: map,
-                                        position: place.geometry.location,
-                                        title: place.name
-                                    });
-                                    addPlaceDetails(place);
-                                });
-
-                                // Center map on first result
-                                map.setCenter(results[0].geometry.location);
-                            } else {
-                                showError(`No dinosaur-related attractions found in ${city}. Try a different city or search term.`);
-                            }
-                        });
-                    } else {
-                        showError(`Could not locate the city "${city}". Please try again with a different city.`);
-                    }
-                });
-            } catch (error) {
-                console.error('Error loading Google Maps API:', error);
-                showError('An error occurred while loading the map. Please try again later.');
-            }
-        }
-
-        function addPlaceDetails(place) {
-            const infoBoxInner = document.getElementById('infoBoxInner');
-            const placeDetails = `
-                <div class="place-details">
-                    <strong>${place.name}</strong>
-                    <p>${place.formatted_address}</p>
-                    ${place.rating ? `<p>Rating: ${place.rating}/5 (${place.user_ratings_total || 0} reviews)</p>` : ''}
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.formatted_address)}" target="_blank">Get Directions</a>
-                </div>
-            `;
-            infoBoxInner.innerHTML += placeDetails;
-        }
-
-        function showError(message) {
-            const infoBoxInner = document.getElementById('infoBoxInner');
-            infoBoxInner.innerHTML = `<p class="error">${message}</p>`;
-        }
-
-        // Error handling for script loading
-        window.onerror = function(message, source, lineno, colno, error) {
-            showError('An error occurred while loading the map. Please try again later.');
-            return true;
-        }
-
-        initMap();
-    </script>
 </body>
 </html>
