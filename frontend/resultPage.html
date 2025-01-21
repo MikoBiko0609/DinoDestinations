@@ -31,6 +31,7 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const city = urlParams.get('city');
+            console.log('Searched city:', city);
 
             if (!city) {
                 showError('No city specified. Please enter a city and try again.');
@@ -40,6 +41,9 @@
             // Geocode the city first to get the coordinates
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ address: city }, (results, status) => {
+                console.log('Geocode status:', status);
+                console.log('Geocode results:', results);
+
                 if (status === 'OK' && results[0]) {
                     const location = results[0].geometry.location;
                     const map = new google.maps.Map(document.getElementById('map'), {
@@ -57,6 +61,9 @@
                     };
 
                     service.nearbySearch(request, (results, status) => {
+                        console.log('Nearby search status:', status);
+                        console.log('Nearby search results:', results);
+
                         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                             // Clear any previous "no results" message
                             document.getElementById('infoBoxInner').innerHTML = '';
