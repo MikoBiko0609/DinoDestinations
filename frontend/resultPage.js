@@ -1,4 +1,5 @@
 // In resultPage.js
+require('dotenv').config();
 const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
 // Use the apiKey variable to load the Google Maps API
