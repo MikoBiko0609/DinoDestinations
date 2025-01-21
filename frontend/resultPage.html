@@ -16,7 +16,19 @@
         <div id="map"></div>
     </div>
     <script>
+        console.log('Executing inline JavaScript');
+
+        // Check if the API key is available
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+        if (apiKey) {
+            console.log('Google Maps API Key:', apiKey);
+        } else {
+            console.error('Google Maps API Key not found');
+        }
+
         function initMap() {
+            console.log('initMap function called');
+
             const urlParams = new URLSearchParams(window.location.search);
             const city = urlParams.get('city');
 
@@ -100,7 +112,16 @@
             showError('An error occurred while loading the map. Please try again later.');
             return true;
         }
+
+        try {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+            script.async = true;
+            document.body.appendChild(script);
+            console.log('Google Maps API script loaded');
+        } catch (error) {
+            console.error('Error loading Google Maps API:', error);
+        }
     </script>
-    <script src="./resultPage.js" onerror="console.error('Error loading resultPage.js')"></script>
 </body>
 </html>
