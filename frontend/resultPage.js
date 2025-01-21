@@ -8,7 +8,7 @@ function loadGoogleMapsScript(callback) {
         return;
     }
 
-    const apiKey = window.GOOGLE_MAPS_API_KEY;  // ✅ Fix: Use the key from resultPage.html
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;  // ✅ Uses Vercel Environment Variable
     if (!apiKey) {
         console.error("❌ Google Maps API Key is missing.");
         showError("Google Maps API key is missing. Please contact support.");
