@@ -1,6 +1,39 @@
 console.log("Executing resultPage.js");
 
-async function initMap() {
+// Function to dynamically load Google Maps API script
+function loadGoogleMapsScript(callback) {
+    if (window.google && window.google.maps) {
+        console.log("✅ Google Maps API already loaded.");
+        callback();
+        return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+        console.log("✅ Google Maps API script loaded.");
+        callback();
+    };
+
+    script.onerror = () => {
+        console.error("❌ Error loading Google Maps API.");
+        showError("Failed to load Google Maps. Please refresh the page.");
+    };
+}
+
+function initMap() {
+    console.log("Initializing Google Map...");
+
+    if (!window.google || !window.google.maps) {
+        console.error("❌ Google Maps API not loaded yet.");
+        showError("Google Maps failed to load. Please try again.");
+        return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const city = urlParams.get("city");
 
@@ -9,34 +42,49 @@ async function initMap() {
         return;
     }
 
-    try {
-        // ✅ Call the backend function instead of exposing the API key
-        const response = await fetch(`/api/maps?city=${encodeURIComponent(city)}`);
-        const data = await response.json();
+    console.log(`🔍 Searching for: ${city}`);
 
-        if (!data.results || data.results.length === 0) {
-            showError(`No dinosaur-related attractions found in ${city}.`);
-            return;
-        }
+    fetch(`/api/maps?city=${encodeURIComponent(city)}`)
+        .then((response) => response.json())
+        .then((data) => {
+            console.log("📦 API Response:", data);
 
-        // Initialize Google Maps
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 12,
-            center: data.results[0].geometry.location,
-        });
+            if (!data.results || data.results.length === 0) {
+                showError(`No dinosaur-related attractions found in ${city}.`);
+                return;
+            }
 
-        data.results.forEach((place) => {
-            new google.maps.Marker({
-                map: map,
-                position: place.geometry.location,
-                title: place.name,
+            // Initialize Google Maps
+            const firstResult = data.results[0];
+            if (!firstResult.geometry || !firstResult.geometry.location) {
+                showError("No valid location data found.");
+                return;
+            }
+
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: firstResult.geometry.location,
             });
-            addPlaceDetails(place);
+
+            data.results.forEach((place) => {
+                if (!place.geometry || !place.geometry.location) {
+                    console.warn("Skipping place with no location:", place);
+                    return;
+                }
+
+                new google.maps.Marker({
+                    map: map,
+                    position: place.geometry.location,
+                    title: place.name,
+                });
+
+                addPlaceDetails(place);
+            });
+        })
+        .catch((error) => {
+            console.error("❌ Error fetching data:", error);
+            showError("An error occurred while loading the map.");
         });
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        showError("An error occurred while loading the map.");
-    }
 }
 
 function addPlaceDetails(place) {
@@ -58,4 +106,7 @@ function showError(message) {
     document.getElementById("infoBoxInner").innerHTML = `<p class="error">${message}</p>`;
 }
 
-document.addEventListener("DOMContentLoaded", initMap);
+// ✅ Load Google Maps API before running initMap()
+document.addEventListener("DOMContentLoaded", () => {
+    loadGoogleMapsScript(initMap);
+});
