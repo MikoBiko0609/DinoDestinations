@@ -1,82 +1,42 @@
 console.log("Executing resultPage.js");
 
-// Load API Key from the global window object
-const GOOGLE_MAPS_API_KEY = window.GOOGLE_MAPS_API_KEY;
-
-console.log("Google Maps API Key:", GOOGLE_MAPS_API_KEY); // Debugging
-
-function initMap() {
+async function initMap() {
     const urlParams = new URLSearchParams(window.location.search);
-    const city = urlParams.get('city');
+    const city = urlParams.get("city");
 
     if (!city) {
-        showError('No city specified. Please enter a city and try again.');
+        showError("No city specified. Please enter a city and try again.");
         return;
     }
 
-    // Load Google Maps dynamically with the API Key
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=startMap`;
-    script.async = true;
-    document.body.appendChild(script);
-    script.onload = () => {
-        console.log("Google Maps API script loaded");
-    };
-    script.onerror = () => {
-        console.error("Error loading Google Maps API");
-        showError("An error occurred while loading the map.");
-    };
-}
+    try {
+        // ✅ Call the backend function instead of exposing the API key
+        const response = await fetch(`/api/maps?city=${encodeURIComponent(city)}`);
+        const data = await response.json();
 
-
-function startMap() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const city = urlParams.get('city');
-    
-    console.log("Initializing map for city:", city);
-    
-    if (!city) {
-        showError('No city specified. Please enter a city and try again.');
-        return;
-    }
-
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address: city }, (results, status) => {
-        if (status === "OK" && results[0]) {
-            const location = results[0].geometry.location;
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: location,
-            });
-
-            const service = new google.maps.places.PlacesService(map);
-            const request = {
-                location: location,
-                radius: 50000, // Covers a 50 km radius around the city
-                keyword: "dinosaur", // Search for ANY dinosaur-related places
-            };
-
-            service.nearbySearch(request, (results, status) => {
-                console.log("Nearby search results:", results, status);
-                if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-                    document.getElementById("infoBoxInner").innerHTML = "";
-                    results.forEach((place) => {
-                        new google.maps.Marker({
-                            map: map,
-                            position: place.geometry.location,
-                            title: place.name,
-                        });
-                        addPlaceDetails(place);
-                    });
-                    map.setCenter(results[0].geometry.location);
-                } else {
-                    showError(`No dinosaur-related attractions found in ${city}.`);
-                }
-            });
-        } else {
-            showError(`Could not locate the city "${city}". Please try another.`);
+        if (!data.results || data.results.length === 0) {
+            showError(`No dinosaur-related attractions found in ${city}.`);
+            return;
         }
-    });
+
+        // Initialize Google Maps
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: data.results[0].geometry.location,
+        });
+
+        data.results.forEach((place) => {
+            new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+                title: place.name,
+            });
+            addPlaceDetails(place);
+        });
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        showError("An error occurred while loading the map.");
+    }
 }
 
 function addPlaceDetails(place) {
@@ -98,5 +58,4 @@ function showError(message) {
     document.getElementById("infoBoxInner").innerHTML = `<p class="error">${message}</p>`;
 }
 
-// Initialize the map when the page loads
 document.addEventListener("DOMContentLoaded", initMap);
