@@ -8,8 +8,15 @@ function loadGoogleMapsScript(callback) {
         return;
     }
 
+    const apiKey = window.GOOGLE_MAPS_API_KEY;  // ✅ Fix: Use the key from resultPage.html
+    if (!apiKey) {
+        console.error("❌ Google Maps API Key is missing.");
+        showError("Google Maps API key is missing. Please contact support.");
+        return;
+    }
+
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);

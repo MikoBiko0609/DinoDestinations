@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="resultPage.css" />
     <title>Dino Destinations</title>
-    <script defer src="resultPage.js"></script> 
-    <script>window.GOOGLE_MAPS_API_KEY = "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY";</script>
 </head>
 <body>
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
@@ -15,5 +13,12 @@
         </div>
         <div id="map"></div>
     </div>
+
+    <!-- ✅ Set API Key in Global JavaScript Variable -->
+    <script>
+        window.GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";  // Replace with actual API key
+    </script>
+
+    <script src="./resultPage.js"></script>
 </body>
 </html>
