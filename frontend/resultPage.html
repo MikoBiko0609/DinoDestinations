@@ -8,6 +8,14 @@
 <body>
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
     <div class="container">
+        <div id="loading-overlay">
+            <div id="loading-spinner">
+                <div class="lds-ring">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+                <p>Loading...</p>
+            </div>
+        </div>
         <div id="infoBox">
             <div id="infoBoxInner">
                 <!-- Place details will be dynamically inserted here -->
@@ -24,6 +32,9 @@
                 showError('No city specified');
                 return;
             }
+
+            // Show the loading overlay
+            document.getElementById('loading-overlay').style.display = 'flex';
 
             // Geocode the city first to get more accurate location
             const geocoder = new google.maps.Geocoder();
@@ -43,19 +54,28 @@
                     };
 
                     service.textSearch(request, (results, status) => {
+                        // Hide the loading overlay
+                        document.getElementById('loading-overlay').style.display = 'none';
+
                         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                             // Clear any previous "no results" message
                             document.getElementById('infoBoxInner').innerHTML = '';
                             
-                            // Sort results by rating (if available)
-                            results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
-                            // Filter results to only include those within a 50km radius of the city
+                            // Sort results by distance from the city
                             const cityLocation = new google.maps.LatLng(location.lat(), location.lng());
+                            results.sort((a, b) => {
+                                const aLocation = new google.maps.LatLng(a.geometry.location.lat(), a.geometry.location.lng());
+                                const bLocation = new google.maps.LatLng(b.geometry.location.lat(), b.geometry.location.lng());
+                                const aDistance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, aLocation) / 1609.34; // Distance in miles
+                                const bDistance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, bLocation) / 1609.34; // Distance in miles
+                                return aDistance - bDistance;
+                            });
+
+                            // Filter results to only include those within a 25-mile radius of the city
                             const filteredResults = results.filter(place => {
                                 const placeLocation = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
-                                const distance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, placeLocation) / 1000; // Distance in km
-                                return distance <= 50;
+                                const distance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, placeLocation) / 1609.34; // Distance in miles
+                                return distance <= 25;
                             });
 
                             if (filteredResults.length > 0) {
@@ -71,7 +91,7 @@
                                 // Center map on first result
                                 map.setCenter(filteredResults[0].geometry.location);
                             } else {
-                                showError('No dinosaur museums found within 50km of this city.');
+                                showError('No dinosaur museums found within 25 miles of this city.');
                             }
                         } else {
                             showError('No dinosaur museums found in this city.');
