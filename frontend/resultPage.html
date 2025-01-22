@@ -37,7 +37,7 @@
 
                     const service = new google.maps.places.PlacesService(map);
                     const request = {
-                        query: `${city} (dinosaur museum OR dinosaur exhibit OR paleontology museum OR fossil museum)`,
+                        query: `${city} (dinosaur)`,
                         type: ['museum', 'zoo', 'aquarium'], // Expanded search to include other potentially relevant places
                         fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
                     };
