@@ -2,12 +2,12 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Get environment variables or use defaults
+// Get environment variables
 $db_host = getenv('DB_HOST') ?: 'aws-0-us-west-1.pooler.supabase.com';
-$db_port = getenv('DB_PORT') ?: '6543';  // Note the specific port for transaction pooler
+$db_port = getenv('DB_PORT') ?: '6543';
 $db_name = getenv('DB_NAME') ?: 'postgres';
 $db_user = getenv('DB_USER') ?: 'postgres.sjufpzxbrjdieymdfhwj';
-$db_password = getenv('DB_PASSWORD');  // This should be set in Render environment variables
+$db_password = getenv('DB_PASSWORD');
 
 try {
     $dsn = "pgsql:host=$db_host;port=$db_port;dbname=$db_name;user=$db_user;password=$db_password";
