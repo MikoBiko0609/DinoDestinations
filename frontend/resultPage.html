@@ -8,14 +8,6 @@
 <body>
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
     <div class="container">
-        <div id="loading-overlay">
-            <div id="loading-spinner">
-                <div class="lds-ring">
-                    <div></div><div></div><div></div><div></div>
-                </div>
-                <p>Loading...</p>
-            </div>
-        </div>
         <div id="infoBox">
             <div id="infoBoxInner">
                 <!-- Place details will be dynamically inserted here -->
@@ -29,12 +21,9 @@
             const city = urlParams.get('city');
 
             if (!city) {
-                showError('No city specified');
+                showError('No city specified. Please enter a city and try again.');
                 return;
             }
-
-            // Show the loading overlay
-            document.getElementById('loading-overlay').style.display = 'flex';
 
             // Geocode the city first to get more accurate location
             const geocoder = new google.maps.Geocoder();
@@ -48,57 +37,40 @@
 
                     const service = new google.maps.places.PlacesService(map);
                     const request = {
-                        query: `${city} dinosaur `,
-                        type: ['museum'],
+                        query: `${city} (dinosaur museum OR dinosaur exhibit OR paleontology museum OR fossil museum)`,
+                        type: ['museum', 'zoo', 'aquarium'], // Expanded search to include other potentially relevant places
                         fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
                     };
 
                     service.textSearch(request, (results, status) => {
-                        // Hide the loading overlay
-                        document.getElementById('loading-overlay').style.display = 'none';
-
                         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
                             // Clear any previous "no results" message
                             document.getElementById('infoBoxInner').innerHTML = '';
                             
-                            // Sort results by distance from the city
-                            const cityLocation = new google.maps.LatLng(location.lat(), location.lng());
+                            // Sort results by rating (if available) and number of reviews
                             results.sort((a, b) => {
-                                const aLocation = new google.maps.LatLng(a.geometry.location.lat(), a.geometry.location.lng());
-                                const bLocation = new google.maps.LatLng(b.geometry.location.lat(), b.geometry.location.lng());
-                                const aDistance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, aLocation) / 1609.34; // Distance in miles
-                                const bDistance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, bLocation) / 1609.34; // Distance in miles
-                                return aDistance - bDistance;
+                                const ratingDiff = (b.rating || 0) - (a.rating || 0);
+                                if (ratingDiff !== 0) return ratingDiff;
+                                return (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
                             });
 
-                            // Filter results to only include those within a 25-mile radius of the city
-                            const filteredResults = results.filter(place => {
-                                const placeLocation = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
-                                const distance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, placeLocation) / 1609.34; // Distance in miles
-                                return distance <= 25;
-                            });
-
-                            if (filteredResults.length > 0) {
-                                filteredResults.forEach((place) => {
-                                    new google.maps.Marker({
-                                        map: map,
-                                        position: place.geometry.location,
-                                        title: place.name
-                                    });
-                                    addPlaceDetails(place);
+                            results.forEach((place) => {
+                                new google.maps.Marker({
+                                    map: map,
+                                    position: place.geometry.location,
+                                    title: place.name
                                 });
+                                addPlaceDetails(place);
+                            });
 
-                                // Center map on first result
-                                map.setCenter(filteredResults[0].geometry.location);
-                            } else {
-                                showError('No dinosaur museums found within 25 miles of this city.');
-                            }
+                            // Center map on first result
+                            map.setCenter(results[0].geometry.location);
                         } else {
-                            showError('No dinosaur museums found in this city.');
+                            showError(`No dinosaur-related attractions found in ${city}. Try a different city or search term.`);
                         }
                     });
                 } else {
-                    showError('Could not locate the specified city.');
+                    showError(`Could not locate the city "${city}". Please try again with a different city.`);
                 }
             });
         }
@@ -127,6 +99,7 @@
             return true;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places,geometry&callback=initMap" defer onerror="showError('Failed to load Google Maps')"></script>
+    <!-- IMPORTANT: Replace with YOUR_API_KEY -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places&callback=initMap" defer onerror="showError('Failed to load Google Maps')"></script>
 </body>
 </html>
