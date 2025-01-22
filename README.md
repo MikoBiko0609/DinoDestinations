@@ -1,48 +1,56 @@
-﻿# Dinodestinations
+# Dino Destinations - Dinosaur Museum Locator
 
-## Description
-
-Our team has developed a unique website dedicated to satisfying your curiosity about dinosaurs in your area. With just a few clicks, you can embark on an exciting journey to discover dinosaur-related attractions near you. Simply log in and enter the nearest city, and our intuitive system will generate a curated list of museums, statues, and parks where you can encounter your favorite prehistoric creatures up close. Whether you're a paleontology enthusiast or just looking for a fun day out, our platform makes it easy to plan your dinosaur-themed adventures with ease and convenience. Start exploring today!
+Dino Destinations is a web application that helps users find nearby dinosaur museums and exhibits. Users can enter a city and the app will display the top-rated dinosaur-related attractions in that area, along with their location, address, and rating information.
 
 ## Features
-
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
-- ...
-
-## Demo
-
-[Link to demo or video]
-
-## Installation
-
-[Installation instructions]
-
-## Usage
-
-[How to use the project]
+- Search for dinosaur museums and exhibits by city
+- Interactive Google Maps integration
+- Sort results by rating and distance
+- Get directions to selected museums
+- Responsive design for all devices
 
 ## Technologies Used
 
-- [Tech 1]
-- [Tech 2]
-- [Tech 3]
-- ...
+### Frontend
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Google Maps API integration
 
-## Challenges
+### Backend
+- PHP
+- Supabase - Database and environment management
+- Google Maps APIs:
+  - Places API
+  - Geocoding API
 
--Implementing a SQL database 
--
+### Deployment
+- Frontend: Vercel
+- Backend: Supabase
+- Version Control: Git & GitHub
 
-## Future Enhancements
-
-[Planned improvements]
-
-## License
-
-[License information]
-
-## Contact
-
-[Contact info for the team]
+## Project Structure
+```bash
+project-root/
+├── frontend/
+│   ├── images/
+│   ├── index.html
+│   ├── login.js
+│   ├── mainPage.css
+│   ├── mainPage.html
+│   ├── mainPage.js
+│   ├── resultPage.css
+│   ├── resultPage.html
+│   └── welcomePage.css
+│
+├── backend/
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── config.php
+│   ├── login.php
+│   ├── register.php
+│   ├── render.yaml
+│   ├── test.php
+│   └── users.sql
+│
+└── README.md
