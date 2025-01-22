@@ -9,12 +9,11 @@
     <div class="logo"><img src="./images/dd_logo.png" alt="Dino Destinations Logo"></div>
     <div class="container">
         <div id="infoBox">
-            <div id="infoBoxInner">
-                <!-- Place details will be dynamically inserted here -->
-            </div>
+            <div id="infoBoxInner">Searching for dinosaur-related places...</div>
         </div>
         <div id="map"></div>
     </div>
+    
     <script>
         function initMap() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -25,41 +24,39 @@
                 return;
             }
 
-            // Geocode the city first to get more accurate location
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ address: city }, (results, status) => {
                 if (status === 'OK' && results[0]) {
                     const location = results[0].geometry.location;
                     const map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 12,
+                        zoom: 13,
                         center: location,
                     });
 
                     const service = new google.maps.places.PlacesService(map);
                     const request = {
-                        query: city + " dinosaur museum OR dinosaur exhibit OR paleontology museum",
-                        type: ['museum'],
-                        fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
+                        location: location,  // ✅ Restricts results to the exact city
+                        radius: 10000,  // ✅ Limits search to 10km (adjustable)
+                        keyword: "dinosaur museum OR fossil museum OR paleontology museum", // ✅ Better keyword targeting
+                        type: ["museum"], // ✅ Restrict to museums only
                     };
 
-                    service.textSearch(request, (results, status) => {
-                        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                            // Clear any previous "no results" message
-                            document.getElementById('infoBoxInner').innerHTML = '';
-                            
-                            // Sort results by rating (if available)
-                            results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                    service.nearbySearch(request, (results, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+                            document.getElementById('infoBoxInner').innerHTML = ''; // Clear previous message
 
                             results.forEach((place) => {
-                                new google.maps.Marker({
-                                    map: map,
-                                    position: place.geometry.location,
-                                    title: place.name
-                                });
-                                addPlaceDetails(place);
+                                if (place.geometry && place.geometry.location) {
+                                    new google.maps.Marker({
+                                        map: map,
+                                        position: place.geometry.location,
+                                        title: place.name
+                                    });
+                                    addPlaceDetails(place);
+                                }
                             });
 
-                            // Center map on first result
+                            // Center the map on the first result
                             map.setCenter(results[0].geometry.location);
                         } else {
                             showError('No dinosaur museums found in this city.');
@@ -85,16 +82,15 @@
         }
 
         function showError(message) {
-            const infoBoxInner = document.getElementById('infoBoxInner');
-            infoBoxInner.innerHTML = `<p class="error">${message}</p>`;
+            document.getElementById('infoBoxInner').innerHTML = `<p class="error">${message}</p>`;
         }
 
-        // Error handling for script loading
         window.onerror = function(message, source, lineno, colno, error) {
             showError('An error occurred while loading the map. Please try again later.');
             return true;
         }
     </script>
+
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places&callback=initMap" defer onerror="showError('Failed to load Google Maps')"></script>
 </body>
 </html>
