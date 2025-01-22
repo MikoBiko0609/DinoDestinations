@@ -37,7 +37,7 @@
 
                     const service = new google.maps.places.PlacesService(map);
                     const request = {
-                        query: city + " dinosaur",
+                        query: `${city} dinosaur museum`,
                         type: ['museum'],
                         fields: ["name", "geometry", "formatted_address", "rating", "user_ratings_total"],
                     };
@@ -50,10 +50,12 @@
                             // Sort results by rating (if available)
                             results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
-                            // Filter results to only include those within the specified city
+                            // Filter results to only include those within a 50km radius of the city
+                            const cityLocation = new google.maps.LatLng(location.lat(), location.lng());
                             const filteredResults = results.filter(place => {
-                                const address = place.formatted_address.toLowerCase();
-                                return address.includes(city.toLowerCase());
+                                const placeLocation = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+                                const distance = google.maps.geometry.spherical.computeDistanceBetween(cityLocation, placeLocation) / 1000; // Distance in km
+                                return distance <= 50;
                             });
 
                             if (filteredResults.length > 0) {
@@ -69,7 +71,7 @@
                                 // Center map on first result
                                 map.setCenter(filteredResults[0].geometry.location);
                             } else {
-                                showError('No dinosaur museums found in this city.');
+                                showError('No dinosaur museums found within 50km of this city.');
                             }
                         } else {
                             showError('No dinosaur museums found in this city.');
@@ -105,6 +107,6 @@
             return true;
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places&callback=initMap" defer onerror="showError('Failed to load Google Maps')"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZMo8PlLxIf1QUUlPTIMzeNu2giPGHRwI&libraries=places,geometry&callback=initMap" defer onerror="showError('Failed to load Google Maps')"></script>
 </body>
 </html>
